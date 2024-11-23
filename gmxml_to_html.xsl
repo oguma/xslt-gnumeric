@@ -1,20 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+    xmlns:exsl="http://exslt.org/common"
     xmlns:gnm="http://www.gnumeric.org/v10.dtd"
-    exclude-result-prefixes="gnm"
+    exclude-result-prefixes="exsl gnm"
     version="1.0">
     
-    <xsl:output indent="yes"/>
+    <xsl:output indent="yes" omit-xml-declaration="yes"/>
+    
+    <xsl:param name="sheetname"/>
+    
+    <xsl:variable name="sheet">
+        <xsl:choose>
+            <xsl:when test="$sheetname">
+                <xsl:copy-of select="/gnm:Workbook/gnm:Sheets/gnm:Sheet[gnm:Name=$sheetname]"/>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:copy-of select="/gnm:Workbook/gnm:Sheets/gnm:Sheet[1]"/>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:variable>
     
     <xsl:variable name="maxrow">
-        <xsl:for-each select="//gnm:Cell/@Row">
+        <xsl:for-each select="exsl:node-set($sheet)/gnm:Sheet/gnm:Cells/gnm:Cell/@Row">
             <xsl:sort data-type="number" order="descending"/>
             <xsl:if test="position() = 1"><xsl:value-of select="."/></xsl:if>
         </xsl:for-each>
     </xsl:variable>
     
     <xsl:variable name="maxcol">
-        <xsl:for-each select="//gnm:Cell/@Col">
+        <xsl:for-each select="exsl:node-set($sheet)/gnm:Sheet/gnm:Cells/gnm:Cell/@Col">
             <xsl:sort data-type="number" order="descending"/>
             <xsl:if test="position() = 1"><xsl:value-of select="."/></xsl:if>
         </xsl:for-each>
@@ -23,7 +37,7 @@
     <xsl:template match="/">
         <table>
             <tr>
-                <xsl:for-each select="//gnm:Cell[@Row=0]">
+                <xsl:for-each select="exsl:node-set($sheet)/gnm:Sheet/gnm:Cells/gnm:Cell[@Row=0]">
                     <th><xsl:value-of select="."/></th>
                 </xsl:for-each>
             </tr>
@@ -51,7 +65,7 @@
         <xsl:param name="index" select="0"/>
         <xsl:param name="maxValue" select="$maxcol"/>
         <xsl:param name="row"/>
-        <td><xsl:value-of select="//gnm:Cell[@Row=$row and @Col=$index]"/></td>
+        <td><xsl:value-of select="exsl:node-set($sheet)/gnm:Sheet/gnm:Cells/gnm:Cell[@Row=$row and @Col=$index]"/></td>
         <xsl:if test="$maxValue > $index">
             <xsl:call-template name="td">
                 <xsl:with-param name="index" select="$index + 1"/>
